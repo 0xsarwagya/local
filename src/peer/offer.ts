@@ -1,5 +1,5 @@
 import { createHandoff, type HandoffOffer } from "@0xsarwagya/handoff";
-import { deriveGhostId, type Ghost } from "@0xsarwagya/ghost";
+import type { Ghost } from "@0xsarwagya/ghost";
 import { createChallenge } from "@0xsarwagya/ghost/server";
 
 import type { OfferBootstrap } from "./bootstrap";
@@ -52,20 +52,6 @@ export async function createOffer(input: {
     throw new Error("no local offer produced");
   }
 
-  // Sanity: the ghostId in the bootstrap must be derivable from the
-  // public key. Ghost enforces this for first-contact anyway; asserting
-  // here catches any inconsistency in the identity store early.
-  const derived = await deriveGhostId(
-    base64UrlToBytes(input.ghost.publicKey),
-  );
-  if (derived !== input.ghost.id) {
-    throw new Error(
-      "Local v1 first-contact requires key-derived ghostIds. " +
-        "This browser's ghost identity was recovered/rotated; recovery is " +
-        "not supported for first-contact peers in v1.",
-    );
-  }
-
   const challengeStore = new SessionChallengeStore();
   const challengeForAnswerer = createChallenge({
     audience: AUDIENCE,
@@ -97,13 +83,4 @@ export async function createOffer(input: {
   );
 
   return { pc, channel, challengeStore, bootstrap, handoff, gathering };
-}
-
-function base64UrlToBytes(b64url: string): Uint8Array {
-  const b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = b64 + "==".slice(0, (4 - (b64.length % 4)) % 4);
-  const bin = atob(padded);
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i += 1) out[i] = bin.charCodeAt(i);
-  return out;
 }

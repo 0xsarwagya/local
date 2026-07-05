@@ -1,5 +1,5 @@
 import { createHandoff, type HandoffOffer } from "@0xsarwagya/handoff";
-import { deriveGhostId, type Ghost } from "@0xsarwagya/ghost";
+import type { Ghost } from "@0xsarwagya/ghost";
 import { createChallenge, verifyGhostProof } from "@0xsarwagya/ghost/server";
 
 import type { AnswerBootstrap, OfferBootstrap } from "./bootstrap";
@@ -33,21 +33,6 @@ export async function createAnswer(input: {
   offerBootstrap: OfferBootstrap;
   receiveUrl: string;
 }): Promise<AnswerResult> {
-  // v1 rule: only accept first-contact peers whose ghostId is derivable
-  // from the presented publicKey. Recovered/rotated identities are
-  // legitimate but require prior pinning, which v1 lacks.
-  const derived = await deriveGhostId(
-    base64UrlToBytes(input.offerBootstrap.offerer.publicKey),
-  );
-  if (derived !== input.offerBootstrap.offerer.ghostId) {
-    throw new Error(
-      "This invitation is from a recovered or rotated identity. Local v1 " +
-        "only accepts first-contact peers whose ghost identity is derived " +
-        "from their key material. Ask them to send a fresh invitation from " +
-        "their original key, or wait for Local's recovered-identity support.",
-    );
-  }
-
   const pc = new RTCPeerConnection(RTC_CONFIG);
 
   // Wait for A's data channel to arrive. Wrap in a promise so callers
@@ -131,18 +116,6 @@ export async function applyAnswerBootstrap(input: {
 }): Promise<void> {
   const { pc, challengeStore, answerBootstrap } = input;
 
-  // v1 first-contact rule (same as offerer/answerer on the other side).
-  const derived = await deriveGhostId(
-    base64UrlToBytes(answerBootstrap.answerer.publicKey),
-  );
-  if (derived !== answerBootstrap.answerer.ghostId) {
-    throw new Error(
-      "The reply is from a recovered or rotated identity. Local v1 only " +
-        "supports first-contact peers whose ghost identity is derived from " +
-        "their key.",
-    );
-  }
-
   const verification = await verifyGhostProof(answerBootstrap.answererProof, {
     expectedAudience: AUDIENCE,
     expectedAction: ACTION,
@@ -163,13 +136,4 @@ export async function applyAnswerBootstrap(input: {
     type: answerBootstrap.sdp.type,
     sdp: answerBootstrap.sdp.sdp,
   });
-}
-
-function base64UrlToBytes(b64url: string): Uint8Array {
-  const b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = b64 + "==".slice(0, (4 - (b64.length % 4)) % 4);
-  const bin = atob(padded);
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i += 1) out[i] = bin.charCodeAt(i);
-  return out;
 }

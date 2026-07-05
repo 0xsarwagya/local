@@ -2,33 +2,27 @@ import { useEffect, useState } from "react";
 
 import { QrCode } from "./QrCode";
 
-type Phase = {
-  kind: "answering";
-  url: string;
+type Props = {
+  peer: { name: string; sas: string };
   artifact: string;
   qrFriendly: boolean;
-  peerName: string;
-  peerSas: string;
+  onCancel: () => void;
 };
 
-export function JoinView({
-  phase,
-  onCancel,
-}: {
-  phase: Phase;
-  onCancel: () => void;
-}) {
+const COPIED_FLASH_MS = 1600;
+
+export function JoinView({ peer, artifact, qrFriendly, onCancel }: Props) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!copied) return;
-    const timer = window.setTimeout(() => setCopied(false), 1600);
+    const timer = window.setTimeout(() => setCopied(false), COPIED_FLASH_MS);
     return () => window.clearTimeout(timer);
   }, [copied]);
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(phase.artifact);
+      await navigator.clipboard.writeText(artifact);
       setCopied(true);
     } catch {
       setCopied(false);
@@ -50,16 +44,16 @@ export function JoinView({
 
       <div>
         <p className="font-serif text-[22px] italic">
-          Waiting for {phase.peerName} to accept.
+          Waiting for {peer.name} to accept.
         </p>
         <p className="mt-2 font-mono text-[11px] text-stone">
-          Fingerprint · <span className="text-ink">{phase.peerSas}</span>
+          Fingerprint · <span className="text-ink">{peer.sas}</span>
         </p>
       </div>
 
       <div className="flex flex-col items-start gap-6">
-        {phase.qrFriendly ? (
-          <QrCode text={phase.artifact} size={288} />
+        {qrFriendly ? (
+          <QrCode text={artifact} size={288} />
         ) : (
           <p className="max-w-md border border-dashed border-stone/40 p-4 font-mono text-[12px] text-stone">
             Reply is too large for a reliable QR scan. Copy it instead.
@@ -75,7 +69,7 @@ export function JoinView({
             {copied ? "Copied" : "Copy reply"}
           </button>
           <span className="font-mono text-[10px] text-stone/70">
-            {phase.artifact.length.toLocaleString()} chars
+            {artifact.length.toLocaleString()} chars
           </span>
         </div>
       </div>
