@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #f6f4ef;
+  --color-ink: #0d0d0d;
+  --color-graphite: #56534b;
+  --color-stone: #9b8c73;
+  --color-rust: #a34a3a;
+
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    background: var(--color-paper);
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-serif);
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--color-rust) 22%, transparent);
+    color: var(--color-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-rust);
+    outline-offset: 3px;
+  }
+}
+
+@layer utilities {
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+  .label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-stone);
+  }
+}
+
+html[data-theme="dark"] {
+  --color-paper: #14120f;
+  --color-ink: #ebe7de;
+  --color-graphite: #b0aba0;
+  --color-stone: #a29580;
+  --color-rust: #c9705a;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) {
+    --color-paper: #14120f;
+    --color-ink: #ebe7de;
+    --color-graphite: #b0aba0;
+    --color-stone: #a29580;
+    --color-rust: #c9705a;
+    color-scheme: dark;
+  }
+}

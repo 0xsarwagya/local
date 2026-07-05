@@ -1,0 +1,43 @@
+{
+  "name": "@0xsarwagya/local",
+  "version": "0.1.0",
+  "description": "Direct browser-to-browser chat. No account. No message database. No chat server. No signaling backend.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0xsarwagya/local.git"
+  },
+  "homepage": "https://local.sarwagya.wtf",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install --with-deps"
+  },
+  "dependencies": {
+    "@0xsarwagya/durable-local": "^0.1.0",
+    "@0xsarwagya/ghost": "^0.1.0",
+    "@0xsarwagya/handoff": "^0.1.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "uqr": "^0.1.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "@tailwindcss/vite": "^4.1.14",
+    "@types/node": "^22.15.3",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.1.14",
+    "typescript": "5.9.2",
+    "vite": "^7.0.6",
+    "vitest": "^3.0.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
