@@ -31,6 +31,11 @@ export type Phase =
       peerGhostId: string;
     }
   | {
+      kind: "preparingAnswer";
+      peerName: string;
+      peerSas: string;
+    }
+  | {
       kind: "answering";
       url: string;
       artifact: string;
@@ -57,6 +62,11 @@ type Action =
       peerName: string;
       peerSas: string;
       peerGhostId: string;
+    }
+  | {
+      type: "preparingAnswer";
+      peerName: string;
+      peerSas: string;
     }
   | {
       type: "answerReady";
@@ -93,6 +103,12 @@ function phaseReducer(_state: Phase, action: Action): Phase {
         peerName: action.peerName,
         peerSas: action.peerSas,
         peerGhostId: action.peerGhostId,
+      };
+    case "preparingAnswer":
+      return {
+        kind: "preparingAnswer",
+        peerName: action.peerName,
+        peerSas: action.peerSas,
       };
     case "answerReady":
       return {
@@ -239,6 +255,12 @@ export function useCeremony(input: CeremonyRole | null): CeremonyApi {
             acceptRef.current = () => resolve(true);
           });
           if (!accepted) return;
+
+          dispatch({
+            type: "preparingAnswer",
+            peerName: bootstrap.offerer.displayName,
+            peerSas: sasFingerprint(bootstrap.offerer.ghostId),
+          });
 
           const handle = await beginAnswererCeremony({
             ghost: input.ghost,

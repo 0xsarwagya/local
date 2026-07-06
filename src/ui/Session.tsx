@@ -70,6 +70,20 @@ export function Session(props: Props) {
           onDecline={leave}
         />
       );
+    case "preparingAnswer":
+      return (
+        <StatusView
+          label={`Preparing your reply to ${ceremony.phase.peerName}…`}
+          detail="Generating an answer, gathering network candidates."
+          hints={[
+            {
+              afterMs: 6_000,
+              text:
+                "Still gathering — this can take a moment on networks with lots of interfaces (multiple Wi-Fi + Ethernet + VPN).",
+            },
+          ]}
+        />
+      );
     case "answering":
       return (
         <JoinView
