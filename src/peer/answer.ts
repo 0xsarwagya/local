@@ -116,11 +116,28 @@ export async function applyAnswerBootstrap(input: {
 }): Promise<void> {
   const { pc, challengeStore, answerBootstrap } = input;
 
+  // Modern Ghost IDs are random-derived, so verifyGhostProof requires a
+  // credentialStore to confirm the (ghostId, credentialId, publicKey)
+  // triple is active. B's answer bootstrap already carries the peer's
+  // advertised (ghostId, publicKey) — that pair, delivered out-of-band
+  // via the handoff, IS our trust anchor. An inline store that only
+  // accepts that exact pair is the right shape for peer-to-peer.
+  const peerCredentialStore = {
+    isCredentialActive: async (
+      ghostId: string,
+      _credentialId: string,
+      publicKey: string,
+    ): Promise<boolean> =>
+      ghostId === answerBootstrap.answerer.ghostId &&
+      publicKey === answerBootstrap.answerer.publicKey,
+  };
+
   const verification = await verifyGhostProof(answerBootstrap.answererProof, {
     expectedAudience: AUDIENCE,
     expectedAction: ACTION,
     expectedGhostId: answerBootstrap.answerer.ghostId,
     challengeStore,
+    credentialStore: peerCredentialStore,
   });
 
   if (!verification.ok) {

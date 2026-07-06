@@ -256,11 +256,29 @@ export class Connection {
       return;
     }
 
+    // Modern Ghost IDs are random-derived (not the legacy fingerprint of
+    // the public key), so verifyGhostProof needs a credentialStore to
+    // confirm the (ghostId, credentialId, publicKey) triple is active.
+    // In peer-to-peer we already have the peer's advertised (ghostId,
+    // publicKey) pair from the bootstrap that arrived out-of-band — that
+    // pair IS our trust anchor. An inline store that only accepts that
+    // exact triple is the right shape here.
+    const peerCredentialStore = {
+      isCredentialActive: async (
+        ghostId: string,
+        _credentialId: string,
+        publicKey: string,
+      ): Promise<boolean> =>
+        ghostId === this.args.peerIdentity.ghostId &&
+        publicKey === this.args.peerIdentity.publicKey,
+    };
+
     const verification = await verifyGhostProof(frame.body.proof, {
       expectedAudience: AUDIENCE,
       expectedAction: ACTION,
       expectedGhostId: this.args.peerIdentity.ghostId,
       challengeStore: this.args.challengeStore,
+      credentialStore: peerCredentialStore,
     });
     if (!verification.ok) {
       this.transition("failed", `peer hello proof failed: ${verification.code}`);
