@@ -64,7 +64,7 @@ export function Home({ onStart }: Props) {
         </section>
       ) : null}
 
-      <footer className="mt-auto pt-16">
+      <footer className="mt-auto flex flex-col gap-6 pt-16 sm:flex-row sm:items-end sm:justify-between">
         {identity ? (
           <div className="flex flex-col gap-1 text-[11px] text-ink/60">
             <span className="label">This browser</span>
@@ -73,6 +73,28 @@ export function Home({ onStart }: Props) {
         ) : (
           <span className="label">Loading identity…</span>
         )}
+
+        <nav
+          aria-label="Attribution"
+          className="flex flex-col gap-1 font-mono text-[11px] text-stone sm:items-end"
+        >
+          <a
+            href="https://me.sarwagya.wtf"
+            rel="author me noopener"
+            target="_blank"
+            className="transition-colors hover:text-rust"
+          >
+            Built by Sarwagya
+          </a>
+          <a
+            href="https://oss.sarwagya.wtf"
+            rel="me noopener"
+            target="_blank"
+            className="transition-colors hover:text-rust"
+          >
+            How this works
+          </a>
+        </nav>
       </footer>
     </div>
   );
