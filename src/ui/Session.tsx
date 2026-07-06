@@ -44,7 +44,12 @@ export function Session(props: Props) {
 
   switch (ceremony.phase.kind) {
     case "starting":
-      return <StatusView label="Preparing this browser…" />;
+      return (
+        <StatusView
+          label="Preparing this browser…"
+          detail="Loading identity, capabilities, and network config."
+        />
+      );
     case "inviting":
       return (
         <InviteView
@@ -78,12 +83,36 @@ export function Session(props: Props) {
         />
       );
     case "connecting":
-      return <StatusView label="Connecting…" />;
+      return (
+        <StatusView
+          label="Connecting…"
+          detail="Punching through your network to reach the other side."
+          hints={[
+            {
+              afterMs: 8_000,
+              text:
+                "This can take a moment on strict networks — corporate Wi-Fi, some cellular carriers, aggressive VPNs.",
+            },
+            {
+              afterMs: 20_000,
+              text:
+                "About 15–20% of network pairs (symmetric NAT, corporate firewalls) cannot connect peer-to-peer without a relay. Local v1 does not run one. If this keeps hanging, try a different network — home Wi-Fi or a mobile hotspot often works.",
+            },
+          ]}
+        />
+      );
     case "verifying":
       return (
         <StatusView
           label={`Verifying identity — ${ceremony.phase.peerName}`}
           detail={`Fingerprint  ${ceremony.phase.peerSas}`}
+          hints={[
+            {
+              afterMs: 6_000,
+              text:
+                "Both sides are proving control of their private keys. This finishes in under a second on a healthy connection.",
+            },
+          ]}
         />
       );
     case "connected":
@@ -102,7 +131,14 @@ export function Session(props: Props) {
       return (
         <StatusView
           label="Connection paused"
-          detail="Waiting for it to recover. If it stays paused, try reconnecting."
+          detail="The network dropped. Waiting for it to recover."
+          hints={[
+            {
+              afterMs: 10_000,
+              text:
+                "If it stays paused, one side probably went offline. Try reconnecting from the other end.",
+            },
+          ]}
         />
       );
     case "failed":
@@ -112,6 +148,7 @@ export function Session(props: Props) {
         <StatusView
           label="Disconnected"
           detail="This session has ended. Your history is still here."
+          animated={false}
         />
       );
   }
@@ -138,7 +175,14 @@ function FailedView({
         a home Wi-Fi or a mobile hotspot often works when a restrictive one
         does not.
       </p>
-      <div>
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={onLeave}
+          className="border border-ink/20 bg-ink px-5 py-3 font-mono text-[12px] uppercase tracking-[0.16em] text-paper hover:border-rust hover:bg-rust"
+        >
+          Try again
+        </button>
         <button
           type="button"
           onClick={onLeave}
