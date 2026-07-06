@@ -77,6 +77,16 @@ export interface ConnectionArgs {
   };
   /** Challenge we need to sign into our own hello, provided by the peer. */
   challengeToSign: Parameters<Ghost["sign"]>[0];
+  /**
+   * When true, the peer's identity was already verified out-of-band
+   * (e.g. the offerer verified the answerer's `answererProof` while
+   * applying the answer bootstrap). In that case handleHello must NOT
+   * re-run verifyGhostProof — the challenge it would consume was
+   * already spent at bootstrap time, and a second consume would fail
+   * with CHALLENGE_REUSED. Version negotiation and slot binding still
+   * run so the connection can transition to "connected".
+   */
+  peerAlreadyVerified?: boolean;
   events: ConnectionEvents;
 }
 
@@ -256,37 +266,48 @@ export class Connection {
       return;
     }
 
-    // Modern Ghost IDs are random-derived (not the legacy fingerprint of
-    // the public key), so verifyGhostProof needs a credentialStore to
-    // confirm the (ghostId, credentialId, publicKey) triple is active.
-    // In peer-to-peer we already have the peer's advertised (ghostId,
-    // publicKey) pair from the bootstrap that arrived out-of-band — that
-    // pair IS our trust anchor. An inline store that only accepts that
-    // exact triple is the right shape here.
-    const peerCredentialStore = {
-      isCredentialActive: async (
-        ghostId: string,
-        _credentialId: string,
-        publicKey: string,
-      ): Promise<boolean> =>
-        ghostId === this.args.peerIdentity.ghostId &&
-        publicKey === this.args.peerIdentity.publicKey,
-    };
+    // Offerer path: the peer's identity was already verified during
+    // applyAnswerBootstrap (which consumed `challengeForAnswerer` from
+    // this store). Re-verifying here would try to consume the same
+    // nonce a second time and fail with CHALLENGE_REUSED. The hello is
+    // still required from the wire — it drives version negotiation and
+    // the "connected" transition — but no fresh proof check is needed.
+    // Answerer path: no out-of-band verification has happened yet, so
+    // we MUST verify here. That verification consumes `challengeForOfferer`
+    // from B's own store — a nonce that has never been used before.
+    if (!this.args.peerAlreadyVerified) {
+      // Modern Ghost IDs are random-derived (not the legacy fingerprint of
+      // the public key), so verifyGhostProof needs a credentialStore to
+      // confirm the (ghostId, credentialId, publicKey) triple is active.
+      // In peer-to-peer we already have the peer's advertised (ghostId,
+      // publicKey) pair from the bootstrap that arrived out-of-band — that
+      // pair IS our trust anchor. An inline store that only accepts that
+      // exact triple is the right shape here.
+      const peerCredentialStore = {
+        isCredentialActive: async (
+          ghostId: string,
+          _credentialId: string,
+          publicKey: string,
+        ): Promise<boolean> =>
+          ghostId === this.args.peerIdentity.ghostId &&
+          publicKey === this.args.peerIdentity.publicKey,
+      };
 
-    const verification = await verifyGhostProof(frame.body.proof, {
-      expectedAudience: AUDIENCE,
-      expectedAction: ACTION,
-      expectedGhostId: this.args.peerIdentity.ghostId,
-      challengeStore: this.args.challengeStore,
-      credentialStore: peerCredentialStore,
-    });
-    if (!verification.ok) {
-      this.transition("failed", `peer hello proof failed: ${verification.code}`);
-      return;
-    }
-    if (verification.publicKey !== this.args.peerIdentity.publicKey) {
-      this.transition("failed", "peer hello public key mismatch");
-      return;
+      const verification = await verifyGhostProof(frame.body.proof, {
+        expectedAudience: AUDIENCE,
+        expectedAction: ACTION,
+        expectedGhostId: this.args.peerIdentity.ghostId,
+        challengeStore: this.args.challengeStore,
+        credentialStore: peerCredentialStore,
+      });
+      if (!verification.ok) {
+        this.transition("failed", `peer hello proof failed: ${verification.code}`);
+        return;
+      }
+      if (verification.publicKey !== this.args.peerIdentity.publicKey) {
+        this.transition("failed", "peer hello public key mismatch");
+        return;
+      }
     }
 
     // Bind the conversation slot now that identity is verified.

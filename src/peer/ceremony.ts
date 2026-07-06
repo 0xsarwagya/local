@@ -72,6 +72,10 @@ export function beginOffererCeremony(input: {
           ghost: input.ghost,
           peerIdentity: answerBootstrap.answerer,
           challengeToSign: answerBootstrap.challengeForOfferer,
+          // B's identity was already verified in applyAnswerBootstrap
+          // (which consumed `challengeForAnswerer` from this store).
+          // Re-verifying B's hello would double-consume the same nonce.
+          peerAlreadyVerified: true,
           events: input.events,
         });
         await connection.start();
