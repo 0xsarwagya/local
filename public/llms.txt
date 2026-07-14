@@ -1,0 +1,26 @@
+# Local
+
+> Same-browser identity, same-tab, no server.
+
+Local is a browser-to-browser demo of three primitives shipped from
+the sarwagya.wtf workshop:
+
+- @0xsarwagya/ghost — persistent cryptographic identity without accounts
+- @0xsarwagya/handoff — move application state between devices without a cloud
+- @0xsarwagya/durable-local — named durable values in the browser
+
+The app is a peer-to-peer chat that identifies its participants by
+Ghost's non-extractable Ed25519 keys, bootstraps peers with a Handoff
+artifact, and persists the conversation with durable-local. No server
+sees the messages. No account is required.
+
+## Primary pages
+
+- [Local](https://local.sarwagya.wtf): the app
+
+## Related
+
+- https://oss.sarwagya.wtf/ghost — package landing + docs
+- https://oss.sarwagya.wtf/handoff — package landing + docs
+- https://oss.sarwagya.wtf/durable-local — package landing + docs
+- https://github.com/0xsarwagya/local — the repo, MIT
